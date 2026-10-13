@@ -1,0 +1,159 @@
+# ZAgent Build and Development Artifacts
+
+# Executable
+zagent.exe
+zagent
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Build directories
+build/
+*.vcxproj
+*.sln
+*.vcxproj.filters
+*.vcxproj.user
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Log files
+*.log
+*.logs
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.old
+
+# Package files
+*.zip
+*.tar.gz
+*.tar.bz2
+
+# Environment files
+.env
+.venv
+venv/
+ENV/
+env/
+
+# IDE and IDE plugins
+.vscode/
+.idea/
+
+# Jupyter Notebook
+*.ipynb
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+.share/
+pip-*egg-info/
+.prod-packages.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+cover*
+pytest_report.html
+
+# Profiling files
+.prof
+
+# Other
+*archive*
+*.7z
+*.tar.bz2
+*.tar.gz
+*.tar.xz
+*.tgz
+
+# Icon files
+*.ico
+*.icns
+
+# Media files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.svg
+*.bmp
+*.tiff
+*.mp3
+*.mp4
+*.webm
+*.avi
+
+# Config files
+*.config
+*.ini
+*.conf
+*.cfg
+
+# Database files
+*.db
+*.sqlite
+
+# File backups
+*.backup
+*.bak
+
+# Deployment files
+*.bundle
+*.war
+*.ear
+
+# All shell scripts should be included in git if they are part             # Don't forget to include shell scripts
+*.sh
+
+# All python scripts should be included in git
+*.py
+
+# All markdown files should be included in git
+*.md
+
+# Keep temporary build scripts
+build.ps1
+configure.ps1
+
+# Keep documentation
+*.txt
+*.md
+*.rst
+*.tex

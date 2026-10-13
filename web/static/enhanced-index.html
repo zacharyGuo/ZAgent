@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZAgent - AI Coding Agent Web Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.error {
+            background: #dc3545;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 500px;
+            background: white;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 12px;
+            position: relative;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            margin-left: 40px;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            margin-right: 40px;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.system {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            margin-left: auto;
+            margin-right: auto;
+            text-align: center;
+            max-width: 80%;
+        }
+
+        .message-tools {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            font-size: 0.85rem;
+        }
+
+        .tool-call-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd93d, #ff9f43);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .message-sender {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .message-content {
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .message-timestamp {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 8px;
+            text-align: right;
+        }
+
+        .chat-input {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 10px;
+            max-width: 100%;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .message-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .send-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .sidebar {
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 20px;
+            color: #495057;
+            font-size: 1.2rem;
+        }
+
+        .session-list {
+            margin-bottom: 20px;
+        }
+
+        .session-item {
+            padding: 12px 15px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .session-item:hover {
+            background: #e3f2fd;
+            border-color: #667eea;
+        }
+
+        .session-item.active {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+        }
+
+        .new-session-button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+
+        .new-session-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .status-item {
+            text-align: center;
+        }
+
+        .status-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .status-label {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .connection-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 20px;
+            color: #155724;
+            font-size: 0.85rem;
+        }
+
+        .connection-status.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            .message.user {
+                margin-left: 0;
+            }
+            .message.assistant {
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ZAgent</h1>
+            <p class="subtitle">AI Coding Agent - Web Interface</p>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-indicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Connecting...</span>
+            </div>
+            <div class="connection-status" id="connectionStatus">
+                <span>🔗</span>
+                <span id="connectionText">Disconnected</span>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h3>Chat with ZAgent</h3>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message system">
+                        <div class="message-sender">System</div>
+                        <div class="message-content">
+                            Welcome to ZAgent web interface! Start a conversation to analyze and modify your codebase.
+                            <br><br>
+                            <strong>Available commands:</strong><br>
+                            • "List files in workspace" - Browse project structure<br>
+                            • "Read file config.json" - Read file contents<br>
+                            • "Search class User" - Find classes in code<br>
+                            • "Add method calculate() to User" - Modify code<br>
+                            • "Build project and run tests" - Execute build process<br>
+                            • "/help" - Show console help<br>
+                            • "/reset" - Clear conversation<br>
+                            • "/status" - Show agent status<br>
+                        </div>
+                        <div class="message-timestamp">
+                            Just now
+                        </div>
+                    </div>
+                </div>
+
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="loading-spinner"></div>
+                </div>
+
+                <div class="chat-input">
+                    <div class="input-container">
+                        <input type="text" class="message-input" id="messageInput"
+                               placeholder="Type your message here..." autocomplete="off">
+                        <button class="send-button" id="sendButton">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <h3>📁 Sessions</h3>
+                <div class="session-list" id="sessionList">
+                    <div class="session-item active" onclick="loadSession('current-session')">
+                        <strong>Current Session</strong>
+                        <br>
+                        <small>Interactive coding session</small>
+                    </div>
+                </div>
+
+                <button class="new-session-button" onclick="createSession()">+ New Session</button>
+
+                <h3>📊 Session Stats</h3>
+                <div class="status-info">
+                    <div class="status-item">
+                        <div class="status-value" id="messageCount">0</div>
+                        <div class="status-label">Messages</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-value" id="toolCount">0</div>
+                        <div class="status-label">Tool Calls</div>
+                    </div>
+                    <div class="status-item">
+                        <div class="status-value" id="sessionDuration">0m</div>
+                        <div class="status-label">Duration</div>
+                    </div>
+                </div>
+
+                <h3>🔧 Tools Used</h3>
+                <div id="tools-used">
+                    <div style="padding: 10px; background: #f8f9fa; border-radius: 8px; margin-bottom: 10px;">
+                        <strong>Active Tools:</strong>
+                        <div style="margin-top: 8px;">
+                            <span class="tool-call-badge">list_files</span>
+                            <span class="tool-call-badge">read_file</span>
+                            <span class="tool-call-badge">search</span>
+                            <span class="tool-call-badge">apply_patch</span>
+                            <span class="tool-call-badge">shell</span>
+                            <span class="tool-call-badge">build</span>
+                            <span class="tool-call-badge">test</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection
+        let ws = null;
+        let currentSessionId = null;
+        let sessionHistory = {};
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+
+        // Initialize WebSocket connection
+        function connectWebSocket() {
+            // For now, use fetch API with polling since WebSocket requires a WebSocket server
+            // In the real implementation, this would connect to the ZAgent WebSocket endpoint
+            console.log("Web interface initialized - using fetch API with polling");
+
+            updateConnectionStatus('Connected', true);
+
+            // Create initial session
+            setTimeout(createSession, 100);
+        }
+
+        // Update connection status
+        function updateConnectionStatus(text, isConnected) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            const connectionStatus = document.getElementById('connectionStatus');
+            const connectionText = document.getElementById('connectionText');
+
+            if (isConnected) {
+                statusDot.classList.remove('error');
+                statusText.textContent = 'Connected';
+                connectionStatus.classList.remove('error');
+                connectionText.textContent = 'Live';
+            } else {
+                statusDot.classList.add('error');
+                statusText.textContent = 'Disconnected';
+                connectionStatus.classList.add('error');
+                connectionText.textContent = 'Reconnecting...';
+            }
+        }
+
+        // Create a new session
+        async function createSession() {
+            showLoading(true);
+            try {
+                const response = await fetch(`${API_BASE}/sessions`, {
+                    method: 'GET'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    currentSessionId = data.sessions && data.sessions.length > 0 ?
+                        data.sessions[0] : generateUUID();
+
+                    updateSessionList();
+                    displayMessage('System', 'New session created. Start coding!', 'system');
+                    updateSessionStats();
+                }
+            } catch (error) {
+                console.error('Failed to create session:', error);
+                displayMessage('Error', 'Failed to create session. Please try again.', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Update session list in UI
+        async function updateSessionList() {
+            try {
+                const response = await fetch(`${API_BASE}/sessions`, {
+                    method: 'GET'
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const sessionList = document.getElementById('sessionList');
+                    sessionList.innerHTML = '';
+
+                    data.sessions.forEach(sessionId => {
+                        const sessionItem = document.createElement('div');
+                        sessionItem.className = 'session-item';
+                        if (sessionId === currentSessionId) {
+                            sessionItem.classList.add('active');
+                        }
+                        sessionItem.innerHTML = `
+                            <strong>Session: ${sessionId}</strong>
+                            <br>
+                            <small>Created: ${new Date().toLocaleString()}</small>
+                        `;
+                        sessionItem.onclick = () => loadSession(sessionId);
+                        sessionList.appendChild(sessionItem);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to update session list:', error);
+            }
+        }
+
+        // Load a specific session
+        async function loadSession(sessionId) {
+            if (sessionId === currentSessionId) return;
+
+            showLoading(true);
+            currentSessionId = sessionId;
+
+            // Clear current messages
+            clearChatMessages();
+
+            try {
+                displayMessage('System', `Loading session: ${sessionId}`, 'system');
+
+                // Load session messages (in a real implementation, this would fetch from API)
+                // For now, just display a message
+                setTimeout(() => {
+                    displayMessage('System', `Session ${sessionId} loaded. You can start messaging.`, 'system');
+                    updateSessionStats();
+                }, 500);
+
+            } catch (error) {
+                console.error('Failed to load session:', error);
+                displayMessage('Error', 'Failed to load session.', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Send message to the agent
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+
+            if (!message || !currentSessionId) return;
+
+            // Display user message
+            displayMessage('You', message, 'user');
+            messageInput.value = '';
+
+            // Show loading indicator
+            const loadingId = displayMessage('ZAgent', 'Thinking...', 'assistant');
+            showLoading(true);
+
+            try {
+                const response = await fetch(`${API_BASE}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sessionId: currentSessionId,
+                        message: message
+                    })
+                });
+
+                // Remove loading message
+                removeMessage(loadingId);
+                showLoading(false);
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayMessage('ZAgent', data.reply, 'assistant');
+
+                    // Check for tool calls in the response
+                    if (data.toolCall) {
+                        const toolCallBadge = document.createElement('div');
+                        toolCallBadge.className = 'tool-call-badge';
+                        toolCallBadge.textContent = data.toolCall;
+
+                        // Add tool call to the last assistant message
+                        const assistantMessages = document.querySelectorAll('.message.assistant');
+                        if (assistantMessages.length > 0) {
+                            const lastAssistantMsg = assistantMessages[assistantMessages.length - 1];
+                            let toolsDiv = lastAssistantMsg.querySelector('.message-tools');
+                            if (!toolsDiv) {
+                                toolsDiv = document.createElement('div');
+                                toolsDiv.className = 'message-tools';
+                                lastAssistantMsg.appendChild(toolsDiv);
+                            }
+                            toolsDiv.appendChild(toolCallBadge);
+                        }
+                    }
+
+                    updateSessionStats();
+                    updateSessionList();
+                } else {
+                    const errorData = await response.json();
+                    displayMessage('Error', errorData.error || 'Unknown error', 'error');
+                }
+            } catch (error) {
+                removeMessage(loadingId);
+                showLoading(false);
+                displayMessage('Error', 'Failed to connect to server. Please try again.', 'error');
+            }
+        }
+
+        // Display a message in the chat
+        function displayMessage(sender, message, type = 'assistant') {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.id = 'msg-' + Date.now();
+
+            const now = new Date();
+            const timestamp = now.toLocaleTimeString();
+
+            const senderDiv = document.createElement('div');
+            senderDiv.className = 'message-sender';
+            senderDiv.textContent = sender;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = message;
+
+            messageDiv.appendChild(senderDiv);
+            messageDiv.appendChild(contentDiv);
+
+            if (type !== 'system' && type !== 'error') {
+                const timestampDiv = document.createElement('div');
+                timestampDiv.className = 'message-timestamp';
+                timestampDiv.textContent = timestamp;
+                messageDiv.appendChild(timestampDiv);
+            }
+
+            chatMessages.appendChild(messageDiv);
+
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            return messageDiv.id;
+        }
+
+        // Remove a message by ID
+        function removeMessage(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.remove();
+            }
+        }
+
+        // Clear all chat messages
+        function clearChatMessages() {
+            const chatMessages = document.getElementById('chatMessages');
+            // Keep only the initial system message
+            while (chatMessages.children.length > 1) {
+                chatMessages.removeChild(chatMessages.lastChild);
+            }
+        }
+
+        // Generate UUID
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // Update session statistics
+        function updateSessionStats() {
+            const messageCount = document.getElementById('messageCount');
+            const toolCount = document.getElementById('toolCount');
+            const sessionDuration = document.getElementById('sessionDuration');
+
+            const allMessages = document.querySelectorAll('.message');
+            const assistantMessages = document.querySelectorAll('.message.assistant');
+            const userMessages = document.querySelectorAll('.message.user');
+
+            messageCount.textContent = allMessages.length - 1; // Subtract system message
+            toolCount.textContent = Math.floor(assistantMessages.length * 0.3); // Estimate tool calls
+            sessionDuration.textContent = '0m'; // Would calculate actual duration in real implementation
+        }
+
+        // Show/hide loading overlay
+        function showLoading(show) {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (show) {
+                loadingOverlay.style.display = 'flex';
+            } else {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+
+            sendButton.addEventListener('click', sendMessage);
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Connect WebSocket
+            connectWebSocket();
+        });
+
+        // Global API base URL
+        const API_BASE = '/api';
+    </script>
+</body>
+</html>
